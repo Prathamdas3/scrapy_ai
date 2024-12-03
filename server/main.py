@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from threading import Thread
 from dotenv import load_dotenv
-from util import check
+from util import getData
 
 
 origins = [
@@ -27,7 +27,10 @@ app.add_middleware(
 
 @app.get("/")
 def get_scraped_content():
-    return check(1)
+    print(getData(1))
+    return {"content":"Process Started","status":200}
+
+
 
 
 if __name__ == "__main__":
