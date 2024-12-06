@@ -18,9 +18,9 @@ def getData(page: str):
         list: A list of dictionaries containing company and job data.
     """
     base_url = getenv("BASE_URL", "")
-    # proxy_server = getenv("PROXY", "")
-    # proxy_username = getenv("PROXY_USER_NAME", "")
-    # proxy_password = getenv("PROXY_USER_PASSWORD", "")
+    proxy_server = getenv("PROXY", "")
+    proxy_username = getenv("PROXY_USER_NAME", "")
+    proxy_password = getenv("PROXY_USER_PASSWORD", "")
     id = 1
 
     url = f"{base_url}{page}"
@@ -32,16 +32,16 @@ def getData(page: str):
 
             # Launch browser with proxy settings
             browser = p.chromium.launch(
-                headless=False,
-                # proxy=(
-                #     {
-                #         "server": proxy_server,
-                #         "username": proxy_username,
-                #         "password": proxy_password,
-                #     }
-                #     if proxy_server
-                #     else None
-                # ),
+                headless=True,
+                proxy=(
+                    {
+                        "server": proxy_server,
+                        "username": proxy_username,
+                        "password": proxy_password,
+                    }
+                    if proxy_server
+                    else None
+                ),
             )
 
             # Set up browser context with a custom user agent
@@ -55,21 +55,21 @@ def getData(page: str):
             # Open a new page
             page = context.new_page()
             page.goto(url, timeout=30000, wait_until="domcontentloaded")
-            #     t= page.wait_for_selector("#captcha_puzzle canvas")
-            #     print(t)
-            #     canvas_base64 = page.evaluate(
-            #         """
-            #     () => {
-            #         const canvas = document.querySelector('#captcha_puzzle canvas');
-            #         return canvas.toDataURL('image/png').split(',')[1];
-            #     }
-            # """
-            #     )
+            t = page.wait_for_selector("#captcha_puzzle canvas")
+            print(t)
+            canvas_base64 = page.evaluate(
+                """
+                () => {
+                    const canvas = document.querySelector('#captcha_puzzle canvas');
+                    return canvas.toDataURL('image/png').split(',')[1];
+                }
+            """
+            )
 
-            #     with open("captcha.png", "wb") as f:
-            #         f.write(base64.b64decode(canvas_base64))
+            with open("captcha.png", "wb") as f:
+                f.write(base64.b64decode(canvas_base64))
 
-            #     print("CAPTCHA image saved as captcha.png")
+            print("CAPTCHA image saved as captcha.png")
 
             # Extract company data
             companies = page.locator(

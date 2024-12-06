@@ -7,6 +7,7 @@ import { useJobList } from "@/hooks/joblist.hook"
 export function JobList() {
   const { handleCallData, currentJobs, callData, currentPage, totalPages, handlePageChange, handleRedirection, isLoading } = useJobList()
 
+
   return (
     <>
       {
@@ -19,8 +20,8 @@ export function JobList() {
               onPageChange={handlePageChange}
             />
 
-            {!isLoading ? <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {currentJobs?.map((job) => (
+            {currentJobs && currentJobs?.length > 0 ? <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {currentJobs.map((job) => (
                 <JobCard
                   key={job.id}
                   companyName={job.company_name}
