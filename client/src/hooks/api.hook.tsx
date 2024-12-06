@@ -1,6 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-
+import { useState } from "react";
+export type jobType = {
+    id: number,
+    company_name: string,
+    company_size: string,
+    company_link: string,
+    job_title: string,
+    job_link: string
+}
 
 export function useCallThreadToStartScrape() {
     const queryClient = useQueryClient()
@@ -32,11 +40,13 @@ export function useCallThreadToStartScrape() {
 
 
 export function useGetScrapeData(callData: boolean) {
+    const [jobs, setJobs] = useState<jobType[] | null>(null)
     const value = useQuery({
         queryKey: ["getScrapeData"],
         queryFn: async () => {
             try {
                 const { data } = await axios.get('http://localhost:8000/get_data')
+                setJobs(data.content)
                 return data
             } catch (error) {
                 console.error('Error while getting data ' + error)
@@ -45,5 +55,5 @@ export function useGetScrapeData(callData: boolean) {
         },
         enabled: callData
     })
-    return value
+    return {...value,jobs}
 }

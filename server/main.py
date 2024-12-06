@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from threading import Thread
 from dotenv import load_dotenv
-from util import getData, all_data
+from scraper import getData, all_data, data_lock
 
 
 origins = [
@@ -23,20 +23,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get('/')
+
+@app.get("/")
 async def index():
-    return {"data":"Wellcome to my api"}
+    return {"data": "Wellcome to my api"}
 
 
-@app.get("/{page}")
-async def index(page:int):
-    Thread(target=getData,args=(page,)).start()
-    return {"content":"Process Started","status":200}
 
 
-@app.get('/get_data')
+@app.get("/get_data")
 async def get_data():
-    return {"content":all_data,"status":200}
+    with data_lock:
+        print(f"all_data contains: {all_data}")  
+        if not all_data:
+            return {"content": [], "status": 404}
+    return {"content": all_data, "status": 200}
+
+
+@app.get("/{page:str}")
+async def index(page: str):
+    Thread(target=getData, args=(page,)).start()
+    return {"content": "Process Started", "status": 200}
 
 
 if __name__ == "__main__":

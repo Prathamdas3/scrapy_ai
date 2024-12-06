@@ -1,10 +1,13 @@
 from playwright.sync_api import sync_playwright
 from os import getenv
+import base64
+from threading import Lock
 
 all_data = []
+data_lock = Lock()
 
 
-def getData(page: int):
+def getData(page: str):
     """
     Scrape data from a web page using Playwright with proxy and custom user-agent.
 
@@ -15,9 +18,9 @@ def getData(page: int):
         list: A list of dictionaries containing company and job data.
     """
     base_url = getenv("BASE_URL", "")
-    proxy_server = getenv("PROXY", "")
-    proxy_username = getenv("PROXY_USER_NAME", "")
-    proxy_password = getenv("PROXY_USER_PASSWORD", "")
+    # proxy_server = getenv("PROXY", "")
+    # proxy_username = getenv("PROXY_USER_NAME", "")
+    # proxy_password = getenv("PROXY_USER_PASSWORD", "")
     id = 1
 
     url = f"{base_url}{page}"
@@ -29,16 +32,16 @@ def getData(page: int):
 
             # Launch browser with proxy settings
             browser = p.chromium.launch(
-                headless=True,
-                proxy=(
-                    {
-                        "server": proxy_server,
-                        "username": proxy_username,
-                        "password": proxy_password,
-                    }
-                    if proxy_server
-                    else None
-                ),
+                headless=False,
+                # proxy=(
+                #     {
+                #         "server": proxy_server,
+                #         "username": proxy_username,
+                #         "password": proxy_password,
+                #     }
+                #     if proxy_server
+                #     else None
+                # ),
             )
 
             # Set up browser context with a custom user agent
@@ -52,7 +55,21 @@ def getData(page: int):
             # Open a new page
             page = context.new_page()
             page.goto(url, timeout=30000, wait_until="domcontentloaded")
-            print(page.content())
+            #     t= page.wait_for_selector("#captcha_puzzle canvas")
+            #     print(t)
+            #     canvas_base64 = page.evaluate(
+            #         """
+            #     () => {
+            #         const canvas = document.querySelector('#captcha_puzzle canvas');
+            #         return canvas.toDataURL('image/png').split(',')[1];
+            #     }
+            # """
+            #     )
+
+            #     with open("captcha.png", "wb") as f:
+            #         f.write(base64.b64decode(canvas_base64))
+
+            #     print("CAPTCHA image saved as captcha.png")
 
             # Extract company data
             companies = page.locator(
@@ -90,7 +107,7 @@ def getData(page: int):
                 job_elements = parent.locator(
                     "div.items-end.justify-between.rounded-2xl.px-2.py-2"
                 )
-                
+
                 for j in range(job_elements.count()):
                     job_title = (
                         job_elements.nth(j)
@@ -132,25 +149,24 @@ def getData(page: int):
                     #     ).text_content()
                     #     or "N/A"
                     # )
-
-                    if job_title == "Python Developer":
-                        all_data.append(
-                            {
-                                "id": id,
-                                "job_title": job_title,
-                                "job_link": job_link,
-                                "company_name": company_name.strip(),
-                                "company_link": company_link,
-                                "company_size": company_size.strip(),
-                                # "job_salary": job_salary,
-                                # "job_location": job_location,
-                                # "job_experience": job_experience,
-                            }
-                        )
-                        id = id + 1
+                    with data_lock:
+                        if job_title == "Python Developer":
+                            all_data.append(
+                                {
+                                    "id": id,
+                                    "job_title": job_title,
+                                    "job_link": job_link,
+                                    "company_name": company_name.strip(),
+                                    "company_link": company_link,
+                                    "company_size": company_size.strip(),
+                                    # "job_salary": job_salary,
+                                    # "job_location": job_location,
+                                    # "job_experience": job_experience,
+                                }
+                            )
+                            id = id + 1
 
             browser.close()
-            print(all_data)
             return all_data
 
     except Exception as e:
