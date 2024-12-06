@@ -1,68 +1,160 @@
-from os import getenv
 from playwright.sync_api import sync_playwright
+from os import getenv
+
+all_data = []
 
 
 def getData(page: int):
-    url: str = getenv("BASE_URL", "") + str(page)
+    """
+    Scrape data from a web page using Playwright with proxy and custom user-agent.
+
+    Args:
+        page (int): The page number to scrape.
+
+    Returns:
+        list: A list of dictionaries containing company and job data.
+    """
+    base_url = getenv("BASE_URL", "")
+    proxy_server = getenv("PROXY", "")
+    proxy_username = getenv("PROXY_USER_NAME", "")
+    proxy_password = getenv("PROXY_USER_PASSWORD", "")
+    id = 1
+
+    url = f"{base_url}{page}"
+
+    global all_data
+
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            page = browser.new_page()
-            
-            page.goto(url, timeout=6000)
+
+            # Launch browser with proxy settings
+            browser = p.chromium.launch(
+                headless=True,
+                proxy=(
+                    {
+                        "server": proxy_server,
+                        "username": proxy_username,
+                        "password": proxy_password,
+                    }
+                    if proxy_server
+                    else None
+                ),
+            )
+
+            # Set up browser context with a custom user agent
+            context = browser.new_context(
+                user_agent=(
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                    "(KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
+                )
+            )
+
+            # Open a new page
+            page = context.new_page()
+            page.goto(url, timeout=30000, wait_until="domcontentloaded")
+            print(page.content())
+
+            # Extract company data
             companies = page.locator(
                 "div.mb-6.w-full.rounded.border.border-gray-400.bg-white"
             )
-            companies_count = companies.count()
-            all_data = []
-            for i in range(companies_count):
+
+            for i in range(companies.count()):
                 parent = companies.nth(i)
-                child_company = parent.locator("div.w-full.space-y-2.px-4.pb-2.pt-4")
-                child_job = parent.locator(
-                    "div.items-end.justify-between.rounded-2xl.px-2.py-2"
-                )
-                child_count = child_company.count()
+                company_info = parent.locator("div.w-full.space-y-2.px-4.pb-2.pt-4")
 
-                for j in range(child_count):
-                    company_element = child_company.nth(j)
-                    # job_element=child_job.nth(j)
-
-                    # company information
-                    company_name = company_element.locator(
+                company_name = (
+                    company_info.locator(
                         "h2.inline.text-md.font-semibold"
                     ).text_content()
-                    company_size = company_element.locator(
+                    or "N/A"
+                )
+                company_size = (
+                    company_info.locator(
                         "span.text-xs.italic.text-neutral-500"
                     ).text_content()
-                    # company_description = company_element.locator("span.text-xs.text-neutral-1000").text_content().strip() if there is no description then it is giving me an error
+                    or "N/A"
+                )
+                # compay_description = (
+                #     company_info.locator(
+                #         "span.text-xs.text-neutral-1000"
+                #     ).text_content()
+                #     or "N/A"
+                # )
+                company_link = (
+                    company_info.locator("a.text-neutral-1000").get_attribute("href")
+                    or "N/A"
+                )
 
-                    # job information
-                    jobs = []
-                    child_job_count = child_job.count()
-                    for k in range(child_job_count):
-                        job = child_job.nth(k)
-                        job_title = job.locator(
-                            "a.mr-2.text-sm.font-semibold.text-brand-burgandy"
-                        ).text_content()
-                        
+                # Extract job data
+                job_elements = parent.locator(
+                    "div.items-end.justify-between.rounded-2xl.px-2.py-2"
+                )
+                
+                for j in range(job_elements.count()):
+                    job_title = (
+                        job_elements.nth(j)
+                        .locator("a.mr-2.text-sm.font-semibold.text-brand-burgandy")
+                        .text_content()
+                        or "N/A"
+                    )
+                    job_link = (
+                        job_elements.nth(j)
+                        .locator("a.mr-2.text-sm.font-semibold.text-brand-burgandy")
+                        .get_attribute("href")
+                        or "N/A"
+                    )
 
-                        # job_details_locator = job.locator("span.pl-1.text-xs")
-                        # job_details = []
-                        # job_details.append(
-                        #     {
-                        #         "salary": job_details_locator.nth(0).text_content() or "",
-                        #         "location": job_details_locator.nth(1).text_content() or "",
-                        #         "experience": job_details_locator.nth(2).text_content() or "",
-                        #     }
-                        # )
-                        
-                        jobs.append({"job_title":job_title})
+                    # job_salary = (
+                    #     job_elements.nth(j)
+                    #     .locator("span.pl-1.text-xs")
+                    #     .nth(0)
+                    #     .text_content()
+                    #     or "N/A"
+                    # )
+                    # job_location = (
+                    #     job_elements.nth(j)
+                    #     .locator("span.pl-1.text-xs")
+                    #     .nth(1)
+                    #     .text_content()
+                    #     or "N/A"
+                    # )
+                    # job_experience = (
+                    #     job_elements.nth(j)
+                    #     .locator("span.pl-1.text-xs")
+                    #     .nth(1)
+                    #     .text_content()
+                    #     or "N/A"
+                    # )
+                    # job_posting = (
+                    #     job_elements.locator(
+                    #         "span.text-xs.lowercase.text-dark-a.mr-2.hidden.flex-wrap.content-center"
+                    #     ).text_content()
+                    #     or "N/A"
+                    # )
 
-                    all_data.append({"company_name":company_name,"company_size":company_size,"jobs":jobs})
+                    if job_title == "Python Developer":
+                        all_data.append(
+                            {
+                                "id": id,
+                                "job_title": job_title,
+                                "job_link": job_link,
+                                "company_name": company_name.strip(),
+                                "company_link": company_link,
+                                "company_size": company_size.strip(),
+                                # "job_salary": job_salary,
+                                # "job_location": job_location,
+                                # "job_experience": job_experience,
+                            }
+                        )
+                        id = id + 1
+
             browser.close()
+            print(all_data)
             return all_data
+
     except Exception as e:
-        print(f"Error while scraping the data {e}")
+        print(f"Error while scraping data: {e}")
         if "ERR_CONNECTION_REFUSED" in str(e):
             print("Blocked! Connection refused.")
         return []
