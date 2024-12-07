@@ -37,7 +37,6 @@ async def index():
 @app.get("/get_data")
 async def get_data():
     with data_lock:
-        print(f"all_data contains: {all_data}")  
         if not all_data:
             return {"content": [], "status": 404}
     return {"content": all_data, "status": 200}

@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { jobType } from '@/hooks/api.hook'
 
 
-const ITEMS_PER_PAGE = 12
+const ITEMS_PER_PAGE = 9
 
 export function useJobList() {
     

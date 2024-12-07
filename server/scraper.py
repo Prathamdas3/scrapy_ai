@@ -22,16 +22,16 @@ def getData(page: str):
         with sync_playwright() as p:
             # Launch browser with proxy settings
             browser = p.chromium.launch(
-                headless=True,
-                # proxy=(
-                #     {
-                        # "server": proxy_server,
-                        # "username": proxy_username,
-                        # "password": proxy_password,
-                    # }
-                #     if proxy_server
-                #     else None
-                # ),
+                headless=False,
+                proxy=(
+                    {
+                        "server": proxy_server,
+                        "username": proxy_username,
+                        "password": proxy_password,
+                    }
+                    if proxy_server
+                    else None
+                ),
             )
 
             # Set up browser context with a custom user agent
@@ -45,7 +45,7 @@ def getData(page: str):
             # Open a new page
             page = context.new_page()
             page.goto(url, timeout=30000, wait_until="domcontentloaded")
-            print(page.content())
+            # print(page.content())
 
             # Extract company data
             companies = page.locator(
