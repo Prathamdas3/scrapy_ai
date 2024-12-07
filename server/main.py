@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from threading import Thread
 from dotenv import load_dotenv
 from scraper import getData, all_data, data_lock
+from os import getenv
 
 
 origins = [
@@ -22,7 +23,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+PORT = getenv("PORT", "8000")
 
 @app.get("/")
 async def index():
@@ -49,4 +50,4 @@ async def index(page: str):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, port=8000)
+    uvicorn.run(app, port=PORT)
