@@ -17,7 +17,7 @@ export function useCallThreadToStartScrape() {
         mutationKey: ["threadCalling"],
         mutationFn: async (page: number) => {
             try {
-                const { data } = await axios.get('http://localhost:8000/' + page)
+                const { data } = await axios.get(`${import.meta.env.VITE_BASE_URL}/${page}`)
                 return { data }
             } catch (error) {
                 console.log('Error while calling the thread ' + error)
@@ -45,7 +45,7 @@ export function useGetScrapeData(callData: boolean) {
         queryKey: ["getScrapeData"],
         queryFn: async () => {
             try {
-                const { data } = await axios.get('http://localhost:8000/get_data')
+                const { data } = await axios.get(`${import.meta.env.VITE_BASE_URL}/get_data`)
                 setJobs(data.content)
                 return data
             } catch (error) {
@@ -55,5 +55,5 @@ export function useGetScrapeData(callData: boolean) {
         },
         enabled: callData
     })
-    return {...value,jobs}
+    return { ...value, jobs }
 }
