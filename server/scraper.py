@@ -22,7 +22,7 @@ def getData(page: str):
         with sync_playwright() as p:
             # Launch browser with proxy settings
             browser = p.chromium.launch(
-                headless=False,
+                headless=True,
                 proxy=(
                     {
                         "server": proxy_server,
