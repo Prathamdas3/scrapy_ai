@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 from scraper import getData, all_data, data_lock
 from os import getenv
 
+load_dotenv()
+FROTEND_URL=getenv("FRONTEND_URL","http://localhost:3000")
 
 origins = [
     "http://localhost.tiangolo.com",
@@ -14,7 +16,6 @@ origins = [
     "http://localhost:3000",
 ]
 
-load_dotenv()
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
