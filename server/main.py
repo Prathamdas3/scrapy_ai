@@ -23,7 +23,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-PORT = getenv("PORT", 8000)
+
 
 @app.get("/")
 async def index():
@@ -50,4 +50,4 @@ async def index(page: str):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app,port=PORT)
+    uvicorn.run(app)
